@@ -26,7 +26,7 @@ CREATE TABLE `user` (
 
 -- 默认管理员账号 (密码: admin123)
 INSERT INTO `user` (`username`, `password`, `role`, `name`, `email`, `status`)
-VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'admin', '系统管理员', NULL, 1);
+VALUES ('admin', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'admin', '系统管理员', NULL, 1);
 
 -- =============================================
 -- 资产表
