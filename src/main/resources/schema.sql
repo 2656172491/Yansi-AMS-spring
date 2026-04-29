@@ -140,3 +140,51 @@ CREATE TABLE `pc_asset` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='华为电脑管理';
+
+-- =============================================
+-- 测试数据
+-- =============================================
+
+-- 用户测试数据 (密码均为 123456)
+INSERT INTO `user` (`username`, `password`, `role`, `name`, `email`, `status`) VALUES
+('teacher1', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'teacher', '张老师', 'zhang@school.edu.cn', 1),
+('assistant1', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'assistant', '李同学', 'li@school.edu.cn', 1),
+('assistant2', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'assistant', '王同学', NULL, 1);
+
+-- 库存资产测试数据
+INSERT INTO `asset` (`computer_no`, `mac_address`, `host_sn`, `monitor_sn`, `asset_type`, `stock_status`, `purchase_batch`, `remark`, `status`, `deleted`) VALUES
+('ASM-00001', NULL, 'HW-DESKTOP-001', NULL, 'desktop', 'in_stock', 'BATCH202601', '华为台式机', 1, 0),
+('ASM-00002', NULL, 'HW-DESKTOP-002', NULL, 'desktop', 'in_stock', 'BATCH202601', '华为台式机', 1, 0),
+('ASM-00003', NULL, 'HW-DESKTOP-003', NULL, 'desktop', 'in_stock', 'BATCH202601', '华为台式机', 1, 0),
+('ASM-00004', NULL, NULL, 'HW-MONITOR-001', 'monitor', 'in_stock', 'BATCH202601', '华为显示器', 1, 0),
+('ASM-00005', NULL, NULL, 'HW-MONITOR-002', 'monitor', 'in_stock', 'BATCH202601', '华为显示器', 1, 0),
+('ASM-00006', NULL, NULL, 'HW-MONITOR-003', 'monitor', 'in_stock', 'BATCH202601', '华为显示器', 1, 0),
+('ASM-00007', NULL, 'SN-LAPTOP-001', NULL, 'laptop', 'in_stock', 'BATCH202602', 'ThinkPad笔记本', 1, 0),
+('ASM-00008', NULL, 'SN-LAPTOP-002', NULL, 'laptop', 'in_stock', 'BATCH202602', 'ThinkPad笔记本', 1, 0),
+('ASM-00009', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', '翻页笔 无线', 1, 0),
+('ASM-00010', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', '翻页笔 无线', 1, 0),
+('ASM-00011', NULL, NULL, NULL, 'lock', 'in_use', NULL, '教学楼301门锁', 1, 0),
+('ASM-00012', NULL, NULL, NULL, 'camera', 'in_use', NULL, '走廊监控摄像头', 1, 0),
+('ASM-00013', NULL, NULL, NULL, 'network', 'in_use', NULL, '机房交换机', 1, 0);
+
+-- 华为电脑管理测试数据（已配出的成套设备）
+INSERT INTO `pc_asset` (`computer_no`, `mac_address`, `host_sn`, `monitor_sn`, `department`, `keeper`, `remark`, `status`, `deleted`) VALUES
+('PC-001', 'AA:BB:CC:DD:01:01', 'HW-DESKTOP-100', 'HW-MONITOR-100', '教务处', '赵主任', '教务处主任办公电脑', 1, 0),
+('PC-002', 'AA:BB:CC:DD:01:02', 'HW-DESKTOP-101', 'HW-MONITOR-101', '教务处', '刘老师', '教务处日常办公', 1, 0),
+('PC-003', 'AA:BB:CC:DD:01:03', 'HW-DESKTOP-102', 'HW-MONITOR-102', '学生处', '陈老师', '学生处办公电脑', 1, 0),
+('PC-004', 'AA:BB:CC:DD:01:04', 'HW-DESKTOP-103', 'HW-MONITOR-103', '总务处', '孙老师', '总务处财务专用', 1, 0),
+('PC-005', 'AA:BB:CC:DD:01:05', 'HW-DESKTOP-104', 'HW-MONITOR-104', '信息中心', '周老师', '机房管理用机', 1, 0);
+
+-- 设备更换单测试数据
+INSERT INTO `device_change_order` (`order_no`, `order_type`, `asset_id`, `reporter`, `reporter_dept`, `fault_desc`, `handler`, `handler_id`, `status`, `result`) VALUES
+('CHG-1714300001', 'replace', 1, '赵主任', '教务处', '电脑无法开机，电源指示灯不亮', '李同学', 3, 'pending', NULL),
+('CHG-1714300002', 'replace', 2, '刘老师', '教务处', '显示器屏幕闪烁，影响使用', '李同学', 3, 'pending', NULL),
+('CHG-1714300003', 'recycle', 3, '陈老师', '学生处', '设备老旧，申请回收更换', '王同学', 4, 'done', 'recycled'),
+('CHG-1714300004', 'replace', 7, '孙老师', '总务处', '笔记本电池鼓包', '李同学', 3, 'done', 'replaced');
+
+-- 借出记录测试数据
+INSERT INTO `lending_record` (`asset_id`, `borrower`, `borrower_dept`, `lend_time`, `expected_return`, `handler`, `handler_id`, `status`, `remark`) VALUES
+(7, '钱老师', '体育组', '2026-04-01 09:00:00', '2026-04-15', '李同学', 3, 'lent', '外出培训借用'),
+(8, '吴老师', '英语组', '2026-04-10 14:00:00', '2026-04-20', '王同学', 4, 'lent', '公开课使用'),
+(9, '郑老师', '数学组', '2026-03-20 10:00:00', '2026-03-25', '李同学', 3, 'returned', '已归还'),
+(10, '冯老师', '语文组', '2026-04-25 08:00:00', '2026-05-10', '王同学', 4, 'lent', '教学展示借用');
