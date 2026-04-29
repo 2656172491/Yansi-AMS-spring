@@ -31,7 +31,10 @@ public class AssetService {
 
     @Transactional(rollbackFor = Exception.class)
     public void batchStockIn(List<Asset> assets) {
+        Long maxNo = assetMapper.getMaxComputerNo();
+        long nextNo = (maxNo == null ? 1 : maxNo + 1);
         for (Asset asset : assets) {
+            asset.setComputerNo(String.format("ASM-%05d", nextNo++));
             asset.setStockStatus("in_stock");
             asset.setStatus(1);
             asset.setDeleted(0);
@@ -69,5 +72,13 @@ public class AssetService {
 
     public List<java.util.Map<String, Object>> getDepartmentStats() {
         return assetMapper.countByDepartment();
+    }
+
+    public List<java.util.Map<String, Object>> getStockBatch() {
+        return assetMapper.countByBatch();
+    }
+
+    public List<Asset> findStockByBatch(String assetType, String batch) {
+        return assetMapper.findStockByBatch(assetType, batch);
     }
 }

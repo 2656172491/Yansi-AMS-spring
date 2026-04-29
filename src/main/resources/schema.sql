@@ -29,6 +29,32 @@ INSERT INTO `user` (`username`, `password`, `role`, `name`, `email`, `status`)
 VALUES ('admin', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'admin', '系统管理员', NULL, 1);
 
 -- =============================================
+-- 设备类型表
+-- =============================================
+CREATE TABLE `asset_type` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(50) NOT NULL COMMENT '类型名称',
+    `code` VARCHAR(20) NOT NULL UNIQUE COMMENT '类型编码',
+    `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=启用, 0=禁用',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备类型表';
+
+-- 默认设备类型
+INSERT INTO `asset_type` (`name`, `code`, `sort_order`) VALUES
+('台式主机', 'desktop', 1),
+('显示器', 'monitor', 2),
+('笔记本', 'laptop', 3),
+('智能门锁', 'lock', 4),
+('监控', 'camera', 5),
+('一卡通', 'card', 6),
+('翻页笔', 'pointer', 7),
+('网络设备', 'network', 8),
+('机械钥匙', 'key', 9),
+('未知', 'unknown', 99);
+
+-- =============================================
 -- 资产表
 -- =============================================
 CREATE TABLE `asset` (

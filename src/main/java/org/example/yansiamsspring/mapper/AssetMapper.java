@@ -53,4 +53,13 @@ public interface AssetMapper {
 
     @Select("SELECT department, COUNT(*) as cnt FROM asset WHERE deleted = 0 AND department IS NOT NULL AND department != '' GROUP BY department ORDER BY cnt DESC LIMIT 10")
     List<java.util.Map<String, Object>> countByDepartment();
+
+    @Select("SELECT asset_type, purchase_batch, MIN(created_at) as created_at, COUNT(*) as cnt FROM asset WHERE deleted = 0 AND stock_status = 'in_stock' GROUP BY asset_type, purchase_batch ORDER BY MIN(created_at) DESC")
+    List<java.util.Map<String, Object>> countByBatch();
+
+    @Select("SELECT * FROM asset WHERE deleted = 0 AND stock_status = 'in_stock' AND asset_type = #{assetType} AND purchase_batch = #{batch}")
+    List<Asset> findStockByBatch(@Param("assetType") String assetType, @Param("batch") String batch);
+
+    @Select("SELECT MAX(CAST(SUBSTRING(computer_no, 5) AS UNSIGNED)) FROM asset WHERE computer_no LIKE 'ASM-%'")
+    Long getMaxComputerNo();
 }

@@ -94,4 +94,14 @@ public class AssetController {
     public Result<List<Map<String, Object>>> departmentStats() {
         return Result.success(assetService.getDepartmentStats());
     }
+
+    @GetMapping("/stock-batch")
+    public Result<List<Map<String, Object>>> stockBatch() {
+        return Result.success(assetService.getStockBatch());
+    }
+
+    @GetMapping("/stock-batch-items")
+    public Result<List<Asset>> stockBatchItems(@RequestParam String assetType, @RequestParam String batch) {
+        return Result.success(assetService.findStockByBatch(assetType, batch));
+    }
 }
