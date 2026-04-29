@@ -1,5 +1,18 @@
+-- =============================================
+-- 言寺资产管理系统 - 数据库初始化脚本
+-- 数据库: yansiams
+-- =============================================
+
+-- 删除原有表（按外键依赖顺序）
+DROP TABLE IF EXISTS `lending_record`;
+DROP TABLE IF EXISTS `device_change_order`;
+DROP TABLE IF EXISTS `asset`;
+DROP TABLE IF EXISTS `user`;
+
+-- =============================================
 -- 用户表
-CREATE TABLE IF NOT EXISTS `user` (
+-- =============================================
+CREATE TABLE `user` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `username` VARCHAR(50) NOT NULL UNIQUE COMMENT '登录名',
     `password` VARCHAR(255) NOT NULL COMMENT 'bcrypt加密密码',
@@ -15,8 +28,10 @@ CREATE TABLE IF NOT EXISTS `user` (
 INSERT INTO `user` (`username`, `password`, `role`, `name`, `email`, `status`)
 VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'admin', '系统管理员', NULL, 1);
 
+-- =============================================
 -- 资产表
-CREATE TABLE IF NOT EXISTS `asset` (
+-- =============================================
+CREATE TABLE `asset` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `computer_no` VARCHAR(50) DEFAULT NULL COMMENT '电脑编号',
     `mac_address` VARCHAR(50) DEFAULT NULL COMMENT 'MAC地址',
@@ -26,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `asset` (
     `host_sn` VARCHAR(100) DEFAULT NULL COMMENT '主机序列号',
     `remark` TEXT DEFAULT NULL COMMENT '备注',
     `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常运行, 0=已停用',
-    `asset_type` VARCHAR(20) NOT NULL DEFAULT 'unknown' COMMENT '设备类型',
+    `asset_type` VARCHAR(20) NOT NULL DEFAULT 'unknown' COMMENT '设备类型: desktop/monitor/lock/camera/card/laptop/pointer/network/key/unknown',
     `stock_status` VARCHAR(20) NOT NULL DEFAULT 'in_stock' COMMENT '库存状态: in_stock/in_use/scrapped/returned',
     `purchase_time` DATETIME DEFAULT NULL COMMENT '采购入库时间',
     `purchase_batch` VARCHAR(50) DEFAULT NULL COMMENT '采购批次号',
@@ -38,8 +53,10 @@ CREATE TABLE IF NOT EXISTS `asset` (
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资产表';
 
+-- =============================================
 -- 设备更换单
-CREATE TABLE IF NOT EXISTS `device_change_order` (
+-- =============================================
+CREATE TABLE `device_change_order` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `order_no` VARCHAR(50) NOT NULL COMMENT '单号',
     `order_type` VARCHAR(20) NOT NULL COMMENT 'replace(更换)/recycle(回收)',
@@ -57,8 +74,10 @@ CREATE TABLE IF NOT EXISTS `device_change_order` (
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备更换单';
 
+-- =============================================
 -- 借出记录
-CREATE TABLE IF NOT EXISTS `lending_record` (
+-- =============================================
+CREATE TABLE `lending_record` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `asset_id` BIGINT NOT NULL COMMENT '借出设备ID',
     `borrower` VARCHAR(50) NOT NULL COMMENT '借用人',
