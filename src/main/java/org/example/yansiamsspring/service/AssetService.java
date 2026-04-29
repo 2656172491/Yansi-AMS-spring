@@ -66,4 +66,8 @@ public class AssetService {
     public List<java.util.Map<String, Object>> getStatistics() {
         return assetMapper.countByTypeAndStatus();
     }
+
+    public List<java.util.Map<String, Object>> getDepartmentStats() {
+        return assetMapper.countByDepartment();
+    }
 }

@@ -63,4 +63,8 @@ public class LendingService {
         // 更新设备状态为已回收
         assetMapper.updateStockStatus(record.getAssetId(), "returned", null, null);
     }
+
+    public List<java.util.Map<String, Object>> getLendingStats() {
+        return lendingMapper.countByMonth();
+    }
 }

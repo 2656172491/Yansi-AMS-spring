@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/lending")
@@ -68,5 +69,10 @@ public class LendingController {
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }
+    }
+
+    @GetMapping("/stats")
+    public Result<List<Map<String, Object>>> stats() {
+        return Result.success(lendingService.getLendingStats());
     }
 }

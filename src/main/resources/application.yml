@@ -15,7 +15,7 @@ server:
       enabled: true
       force: true
     context-path: /wsq_zcgl
-  port: 10010
+  port: 8080
 
 mybatis:
   configuration:

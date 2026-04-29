@@ -31,4 +31,7 @@ public interface DeviceChangeOrderMapper {
 
     @Update("UPDATE device_change_order SET status='done', result=#{result}, new_asset_id=#{newAssetId}, remark=#{remark}, updated_at=NOW() WHERE id=#{id}")
     int complete(@Param("id") Long id, @Param("result") String result, @Param("newAssetId") Long newAssetId, @Param("remark") String remark);
+
+    @Select("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as cnt FROM device_change_order GROUP BY month ORDER BY month DESC LIMIT 12")
+    List<java.util.Map<String, Object>> countByMonth();
 }

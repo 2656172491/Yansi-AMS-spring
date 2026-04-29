@@ -30,4 +30,7 @@ public interface LendingRecordMapper {
 
     @Update("UPDATE lending_record SET status='returned', actual_return=NOW(), updated_at=NOW() WHERE id=#{id}")
     int returnDevice(@Param("id") Long id);
+
+    @Select("SELECT DATE_FORMAT(lend_time, '%Y-%m') as month, COUNT(*) as cnt FROM lending_record GROUP BY month ORDER BY month DESC LIMIT 12")
+    List<java.util.Map<String, Object>> countByMonth();
 }

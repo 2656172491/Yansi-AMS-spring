@@ -69,4 +69,8 @@ public class DeviceChangeOrderService {
         }
         // repaired: 维修后归还，设备状态不变
     }
+
+    public List<java.util.Map<String, Object>> getOrderStats() {
+        return orderMapper.countByMonth();
+    }
 }

@@ -93,4 +93,9 @@ public class DeviceChangeOrderController {
             return Result.error(e.getMessage());
         }
     }
+
+    @GetMapping("/stats")
+    public Result<List<Map<String, Object>>> stats() {
+        return Result.success(orderService.getOrderStats());
+    }
 }

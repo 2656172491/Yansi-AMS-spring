@@ -89,4 +89,9 @@ public class AssetController {
     public Result<List<Map<String, Object>>> statistics() {
         return Result.success(assetService.getStatistics());
     }
+
+    @GetMapping("/department-stats")
+    public Result<List<Map<String, Object>>> departmentStats() {
+        return Result.success(assetService.getDepartmentStats());
+    }
 }

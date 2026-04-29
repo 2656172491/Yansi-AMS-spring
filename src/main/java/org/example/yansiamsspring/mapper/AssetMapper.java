@@ -50,4 +50,7 @@ public interface AssetMapper {
 
     @Select("SELECT asset_type, stock_status, COUNT(*) as cnt FROM asset WHERE deleted = 0 GROUP BY asset_type, stock_status")
     List<java.util.Map<String, Object>> countByTypeAndStatus();
+
+    @Select("SELECT department, COUNT(*) as cnt FROM asset WHERE deleted = 0 AND department IS NOT NULL AND department != '' GROUP BY department ORDER BY cnt DESC LIMIT 10")
+    List<java.util.Map<String, Object>> countByDepartment();
 }
