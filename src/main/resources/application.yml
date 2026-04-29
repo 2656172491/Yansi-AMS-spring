@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: yansi-ams-spring
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/yansiams
+    username: root
+    password: Pass.123
+server:
+  tomcat:
+    uri-encoding: UTF-8
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+    context-path: /wsq_zcgl
+  port: 10010
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: org.example.yansiamsspring.pojo
+
+jwt:
+  secret: YansiAMS2026SecretKeyForJWTTokenGeneration
+  expiration: 604800000
