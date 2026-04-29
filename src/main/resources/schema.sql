@@ -6,7 +6,9 @@
 -- 删除原有表（按外键依赖顺序）
 DROP TABLE IF EXISTS `lending_record`;
 DROP TABLE IF EXISTS `device_change_order`;
+DROP TABLE IF EXISTS `pc_asset`;
 DROP TABLE IF EXISTS `asset`;
+DROP TABLE IF EXISTS `asset_type`;
 DROP TABLE IF EXISTS `user`;
 
 -- =============================================
@@ -118,3 +120,23 @@ CREATE TABLE `lending_record` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='借出记录';
+
+-- =============================================
+-- 华为电脑管理表（已配出的台式主机+显示器成套）
+-- =============================================
+CREATE TABLE `pc_asset` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `computer_no` VARCHAR(50) DEFAULT NULL COMMENT '电脑编号',
+    `mac_address` VARCHAR(50) DEFAULT NULL COMMENT 'MAC地址',
+    `department` VARCHAR(50) DEFAULT NULL COMMENT '保管部门',
+    `keeper` VARCHAR(50) DEFAULT NULL COMMENT '保管人',
+    `monitor_sn` VARCHAR(100) DEFAULT NULL COMMENT '显示器序列号',
+    `host_sn` VARCHAR(100) DEFAULT NULL COMMENT '主机序列号',
+    `remark` TEXT DEFAULT NULL COMMENT '备注',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常运行, 0=已停用',
+    `last_inspection_time` DATETIME DEFAULT NULL COMMENT '最近巡检时间',
+    `last_inspection_user` VARCHAR(50) DEFAULT NULL COMMENT '最近巡检人',
+    `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除: 0=正常, 1=已删除',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='华为电脑管理';
