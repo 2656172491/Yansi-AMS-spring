@@ -41,4 +41,3 @@ public interface DeviceChangeOrderMapper {
             "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY) GROUP BY order_type")
     List<java.util.Map<String, Object>> countByType(@Param("days") int days);
 }
-}
