@@ -20,9 +20,11 @@ public interface DeviceChangeOrderMapper {
     DeviceChangeOrder findById(@Param("id") Long id);
 
     @Insert("INSERT INTO device_change_order (order_no, order_type, asset_id, new_asset_id, reporter, reporter_dept, " +
-            "fault_desc, handler, handler_id, status, remark, created_at, updated_at) " +
+            "fault_desc, handler, handler_id, status, remark, asset_category, asset_items, assign_dept, assign_keeper, " +
+            "assign_computer_no, assign_mac_address, assign_host_sn, assign_monitor_sn, created_at, updated_at) " +
             "VALUES (#{orderNo}, #{orderType}, #{assetId}, #{newAssetId}, #{reporter}, #{reporterDept}, " +
-            "#{faultDesc}, #{handler}, #{handlerId}, #{status}, #{remark}, NOW(), NOW())")
+            "#{faultDesc}, #{handler}, #{handlerId}, #{status}, #{remark}, #{assetCategory}, #{assetItems}, " +
+            "#{assignDept}, #{assignKeeper}, #{assignComputerNo}, #{assignMacAddress}, #{assignHostSn}, #{assignMonitorSn}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(DeviceChangeOrder order);
 
@@ -34,4 +36,9 @@ public interface DeviceChangeOrderMapper {
 
     @Select("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as cnt FROM device_change_order GROUP BY month ORDER BY month DESC LIMIT 12")
     List<java.util.Map<String, Object>> countByMonth();
+
+    @Select("SELECT order_type as orderType, COUNT(*) as cnt FROM device_change_order " +
+            "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY) GROUP BY order_type")
+    List<java.util.Map<String, Object>> countByType(@Param("days") int days);
+}
 }

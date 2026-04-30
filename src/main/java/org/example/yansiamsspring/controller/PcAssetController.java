@@ -39,15 +39,23 @@ public class PcAssetController {
 
     @PostMapping
     public Result<?> create(@RequestBody PcAsset pcAsset) {
-        pcAssetService.create(pcAsset);
-        return Result.success();
+        try {
+            pcAssetService.create(pcAsset);
+            return Result.success();
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     public Result<?> update(@PathVariable Long id, @RequestBody PcAsset pcAsset) {
         pcAsset.setId(id);
-        pcAssetService.update(pcAsset);
-        return Result.success();
+        try {
+            pcAssetService.update(pcAsset);
+            return Result.success();
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

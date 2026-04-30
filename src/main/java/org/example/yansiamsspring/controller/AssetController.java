@@ -42,12 +42,14 @@ public class AssetController {
     }
 
     @PostMapping("/stock-in")
-    public Result<?> stockIn(@RequestBody List<Asset> assets) {
+    public Result<?> stockIn(@RequestBody List<Asset> assets, HttpServletRequest request) {
         if (assets == null || assets.isEmpty()) {
             return Result.error("入库列表不能为空");
         }
         try {
-            assetService.batchStockIn(assets);
+            String name = (String) request.getAttribute("name");
+            Long userId = (Long) request.getAttribute("userId");
+            assetService.batchStockIn(assets, name, userId);
             return Result.success();
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
@@ -55,7 +57,7 @@ public class AssetController {
     }
 
     @PostMapping("/assign")
-    public Result<?> assign(@RequestBody Map<String, Object> params) {
+    public Result<?> assign(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         Long assetId = Long.valueOf(params.get("assetId").toString());
         String department = (String) params.get("department");
         String keeper = (String) params.get("keeper");
@@ -65,7 +67,9 @@ public class AssetController {
         }
 
         try {
-            assetService.assignAsset(assetId, department, keeper);
+            String name = (String) request.getAttribute("name");
+            Long userId = (Long) request.getAttribute("userId");
+            assetService.assignAsset(assetId, department, keeper, name, userId);
             return Result.success();
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());

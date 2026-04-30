@@ -98,4 +98,9 @@ public class DeviceChangeOrderController {
     public Result<List<Map<String, Object>>> stats() {
         return Result.success(orderService.getOrderStats());
     }
+
+    @GetMapping("/type-stats")
+    public Result<List<Map<String, Object>>> typeStats(@RequestParam(defaultValue = "7") int days) {
+        return Result.success(orderService.getTypeStats(days));
+    }
 }

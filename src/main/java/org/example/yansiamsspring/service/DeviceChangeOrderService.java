@@ -73,4 +73,8 @@ public class DeviceChangeOrderService {
     public List<java.util.Map<String, Object>> getOrderStats() {
         return orderMapper.countByMonth();
     }
+
+    public List<java.util.Map<String, Object>> getTypeStats(int days) {
+        return orderMapper.countByType(days);
+    }
 }

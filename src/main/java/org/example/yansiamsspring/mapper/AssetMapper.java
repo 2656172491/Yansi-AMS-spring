@@ -62,4 +62,10 @@ public interface AssetMapper {
 
     @Select("SELECT MAX(CAST(SUBSTRING(computer_no, 5) AS UNSIGNED)) FROM asset WHERE computer_no LIKE 'ASM-%'")
     Long getMaxComputerNo();
+
+    @Select("SELECT COUNT(*) FROM asset WHERE deleted = 0 AND host_sn = #{sn}")
+    int countByHostSn(@Param("sn") String sn);
+
+    @Select("SELECT COUNT(*) FROM asset WHERE deleted = 0 AND monitor_sn = #{sn}")
+    int countByMonitorSn(@Param("sn") String sn);
 }

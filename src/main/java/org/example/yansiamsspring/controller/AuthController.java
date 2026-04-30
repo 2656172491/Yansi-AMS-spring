@@ -3,6 +3,7 @@ package org.example.yansiamsspring.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.yansiamsspring.pojo.Result;
 import org.example.yansiamsspring.pojo.User;
+import org.example.yansiamsspring.service.LogService;
 import org.example.yansiamsspring.service.UserService;
 import org.example.yansiamsspring.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,15 @@ public class AuthController {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private LogService logService;
+
     @PostMapping("/login")
-    public Result<?> login(@RequestBody Map<String, String> params) {
+    public Result<?> login(@RequestBody Map<String, String> params, HttpServletRequest request) {
         String username = params.get("username");
         String password = params.get("password");
+        String ip = getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
 
         if (username == null || password == null) {
             return Result.error("用户名和密码不能为空");
@@ -32,14 +38,17 @@ public class AuthController {
 
         User user = userService.findByUsername(username);
         if (user == null) {
+            logService.recordLogin(null, username, null, ip, userAgent, false, "用户不存在");
             return Result.error("用户名或密码错误");
         }
 
         if (!userService.checkPassword(password, user.getPassword())) {
+            logService.recordLogin(user.getId(), username, user.getName(), ip, userAgent, false, "密码错误");
             return Result.error("用户名或密码错误");
         }
 
         String token = jwtUtils.generateToken(user.getId(), user.getUsername(), user.getRole(), user.getName());
+        logService.recordLogin(user.getId(), username, user.getName(), ip, userAgent, true, null);
 
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
@@ -86,5 +95,16 @@ public class AuthController {
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip != null ? ip.split(",")[0].trim() : "unknown";
     }
 }

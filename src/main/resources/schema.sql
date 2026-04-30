@@ -4,6 +4,9 @@
 -- =============================================
 
 -- 删除原有表（按外键依赖顺序）
+DROP TABLE IF EXISTS `operation_log`;
+DROP TABLE IF EXISTS `login_log`;
+DROP TABLE IF EXISTS `asset_flow_log`;
 DROP TABLE IF EXISTS `lending_record`;
 DROP TABLE IF EXISTS `device_change_order`;
 DROP TABLE IF EXISTS `pc_asset`;
@@ -61,7 +64,7 @@ INSERT INTO `asset_type` (`name`, `code`, `sort_order`) VALUES
 -- =============================================
 CREATE TABLE `asset` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `computer_no` VARCHAR(50) DEFAULT NULL COMMENT '电脑编号',
+    `computer_no` VARCHAR(50) DEFAULT NULL UNIQUE COMMENT '电脑编号',
     `mac_address` VARCHAR(50) DEFAULT NULL COMMENT 'MAC地址',
     `department` VARCHAR(50) DEFAULT NULL COMMENT '保管部门',
     `keeper` VARCHAR(50) DEFAULT NULL COMMENT '保管人',
@@ -98,6 +101,14 @@ CREATE TABLE `device_change_order` (
     `status` VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending/checking/done',
     `result` VARCHAR(20) DEFAULT NULL COMMENT 'repaired/replaced/recycled',
     `remark` TEXT COMMENT '备注',
+    `asset_category` VARCHAR(20) DEFAULT NULL COMMENT '物资类别(assign类型时)',
+    `asset_items` TEXT DEFAULT NULL COMMENT '多设备信息JSON(assign类型时)',
+    `assign_dept` VARCHAR(50) DEFAULT NULL COMMENT '配出部门',
+    `assign_keeper` VARCHAR(50) DEFAULT NULL COMMENT '配出保管人',
+    `assign_computer_no` VARCHAR(50) DEFAULT NULL COMMENT '配出电脑编号',
+    `assign_mac_address` VARCHAR(50) DEFAULT NULL COMMENT '配出MAC地址',
+    `assign_host_sn` VARCHAR(100) DEFAULT NULL COMMENT '配出主机SN',
+    `assign_monitor_sn` VARCHAR(100) DEFAULT NULL COMMENT '配出显示器SN',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备更换单';
@@ -120,6 +131,54 @@ CREATE TABLE `lending_record` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='借出记录';
+
+-- =============================================
+-- 出入库流水表
+-- =============================================
+CREATE TABLE `asset_flow_log` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `asset_id` BIGINT DEFAULT NULL COMMENT '设备ID',
+    `asset_type` VARCHAR(20) DEFAULT NULL COMMENT '设备类型',
+    `flow_type` VARCHAR(10) NOT NULL COMMENT 'in=入库, out=出库',
+    `quantity` INT NOT NULL DEFAULT 1 COMMENT '数量',
+    `batch_no` VARCHAR(50) DEFAULT NULL COMMENT '批次号',
+    `operator` VARCHAR(50) DEFAULT NULL COMMENT '操作人',
+    `operator_id` BIGINT DEFAULT NULL COMMENT '操作人ID',
+    `flow_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出入库流水';
+
+-- =============================================
+-- 登录日志表
+-- =============================================
+CREATE TABLE `login_log` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT DEFAULT NULL COMMENT '用户ID',
+    `username` VARCHAR(50) DEFAULT NULL COMMENT '登录账号',
+    `name` VARCHAR(50) DEFAULT NULL COMMENT '用户姓名',
+    `ip` VARCHAR(50) DEFAULT NULL COMMENT '登录IP',
+    `user_agent` VARCHAR(500) DEFAULT NULL COMMENT '浏览器信息',
+    `login_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=成功, 0=失败',
+    `fail_reason` VARCHAR(200) DEFAULT NULL COMMENT '失败原因'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志';
+
+-- =============================================
+-- 操作日志表
+-- =============================================
+CREATE TABLE `operation_log` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT DEFAULT NULL COMMENT '操作人ID',
+    `username` VARCHAR(50) DEFAULT NULL COMMENT '操作账号',
+    `name` VARCHAR(50) DEFAULT NULL COMMENT '操作人姓名',
+    `operation_type` VARCHAR(20) NOT NULL COMMENT '入库/出库/修改/删除/配出/归还',
+    `target_type` VARCHAR(20) DEFAULT NULL COMMENT 'asset/pc_asset/order/lending',
+    `target_id` BIGINT DEFAULT NULL COMMENT '目标ID',
+    `detail` TEXT DEFAULT NULL COMMENT '操作详情(JSON)',
+    `detail_text` VARCHAR(500) DEFAULT NULL COMMENT '可读描述',
+    `result` INT NOT NULL DEFAULT 1 COMMENT '1=成功, 0=失败',
+    `ip` VARCHAR(50) DEFAULT NULL COMMENT '操作IP',
+    `operation_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志';
 
 -- =============================================
 -- 华为电脑管理表（已配出的台式主机+显示器成套）
@@ -182,9 +241,37 @@ INSERT INTO `device_change_order` (`order_no`, `order_type`, `asset_id`, `report
 ('CHG-1714300003', 'recycle', 3, '陈老师', '学生处', '设备老旧，申请回收更换', '王同学', 4, 'done', 'recycled'),
 ('CHG-1714300004', 'replace', 7, '孙老师', '总务处', '笔记本电池鼓包', '李同学', 3, 'done', 'replaced');
 
+INSERT INTO `device_change_order` (`order_no`, `order_type`, `asset_id`, `reporter`, `reporter_dept`, `fault_desc`, `handler`, `handler_id`, `status`, `result`, `asset_category`, `asset_items`, `assign_dept`, `assign_keeper`, `assign_computer_no`, `assign_mac_address`, `assign_host_sn`, `assign_monitor_sn`) VALUES
+('CHG-1714300005', 'assign', 1, '周老师', '信息中心', '新机房配出电脑', '王同学', 4, 'done', NULL, 'desktop', '[{"type":"desktop","sn":"HW-DESKTOP-001","remark":"主机"},{"type":"monitor","sn":"HW-MONITOR-001","remark":"显示器"}]', '信息中心', '周老师', 'ASM-00001', 'AA:BB:CC:DD:02:01', 'HW-DESKTOP-001', 'HW-MONITOR-001');
+
 -- 借出记录测试数据
 INSERT INTO `lending_record` (`asset_id`, `borrower`, `borrower_dept`, `lend_time`, `expected_return`, `handler`, `handler_id`, `status`, `remark`) VALUES
 (7, '钱老师', '体育组', '2026-04-01 09:00:00', '2026-04-15', '李同学', 3, 'lent', '外出培训借用'),
 (8, '吴老师', '英语组', '2026-04-10 14:00:00', '2026-04-20', '王同学', 4, 'lent', '公开课使用'),
 (9, '郑老师', '数学组', '2026-03-20 10:00:00', '2026-03-25', '李同学', 3, 'returned', '已归还'),
 (10, '冯老师', '语文组', '2026-04-25 08:00:00', '2026-05-10', '王同学', 4, 'lent', '教学展示借用');
+
+-- 登录日志测试数据
+INSERT INTO `login_log` (`user_id`, `username`, `name`, `ip`, `user_agent`, `login_time`, `status`, `fail_reason`) VALUES
+(1, 'admin', '系统管理员', '127.0.0.1', 'Mozilla/5.0 Chrome/120', '2026-04-28 08:30:00', 1, NULL),
+(2, 'teacher1', '张老师', '192.168.1.100', 'Mozilla/5.0 Chrome/120', '2026-04-28 09:00:00', 1, NULL),
+(3, 'assistant1', '李同学', '192.168.1.101', 'Mozilla/5.0 Safari/17', '2026-04-29 08:00:00', 1, NULL),
+(1, 'admin', '系统管理员', '127.0.0.1', 'Mozilla/5.0 Chrome/120', '2026-04-29 08:30:00', 1, NULL),
+(NULL, 'hacker', NULL, '10.0.0.1', 'curl/7.88', '2026-04-29 12:00:00', 0, '用户不存在');
+
+-- 操作日志测试数据
+INSERT INTO `operation_log` (`user_id`, `username`, `name`, `operation_type`, `target_type`, `target_id`, `detail_text`, `result`, `ip`, `operation_time`) VALUES
+(1, 'admin', '系统管理员', '入库', 'asset', 1, '入库了 3 台台式主机，批次号 BATCH202601', 1, '127.0.0.1', '2026-04-28 10:00:00'),
+(3, 'assistant1', '李同学', '配出', 'asset', 1, '将台式主机 ASM-00001 配出给信息中心周老师', 1, '192.168.1.101', '2026-04-28 14:00:00'),
+(2, 'teacher1', '张老师', '修改', 'pc_asset', 1, '修改了 PC-001 的保管人为赵主任', 1, '192.168.1.100', '2026-04-29 09:00:00'),
+(3, 'assistant1', '李同学', '归还', 'lending', 3, '归还了翻页笔 ASM-00009，借用人郑老师', 1, '192.168.1.101', '2026-04-29 10:00:00');
+
+-- 出入库流水测试数据
+INSERT INTO `asset_flow_log` (`asset_id`, `asset_type`, `flow_type`, `quantity`, `batch_no`, `operator`, `operator_id`, `flow_time`) VALUES
+(NULL, 'desktop', 'in', 3, 'BATCH202601', '系统管理员', 1, '2026-04-28 10:00:00'),
+(NULL, 'monitor', 'in', 3, 'BATCH202601', '系统管理员', 1, '2026-04-28 10:00:00'),
+(NULL, 'laptop', 'in', 2, 'BATCH202602', '系统管理员', 1, '2026-04-28 10:30:00'),
+(NULL, 'pointer', 'in', 2, 'BATCH202601', '系统管理员', 1, '2026-04-28 11:00:00'),
+(1, 'desktop', 'out', 1, NULL, '李同学', 3, '2026-04-28 14:00:00'),
+(7, 'laptop', 'out', 1, NULL, '李同学', 3, '2026-04-29 09:00:00'),
+(8, 'laptop', 'out', 1, NULL, '王同学', 4, '2026-04-29 10:00:00');
