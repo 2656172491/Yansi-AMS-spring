@@ -23,10 +23,10 @@ public interface AssetMapper {
     @Select("SELECT * FROM asset WHERE stock_status = 'in_stock' AND asset_type = #{assetType} AND deleted = 0")
     List<Asset> findStockPoolByType(@Param("assetType") String assetType);
 
-    @Insert("INSERT INTO asset (computer_no, mac_address, department, keeper, monitor_sn, host_sn, remark, status, " +
-            "asset_type, stock_status, purchase_time, purchase_batch, deleted, created_at, updated_at) " +
-            "VALUES (#{computerNo}, #{macAddress}, #{department}, #{keeper}, #{monitorSn}, #{hostSn}, #{remark}, #{status}, " +
-            "#{assetType}, #{stockStatus}, #{purchaseTime}, #{purchaseBatch}, 0, NOW(), NOW())")
+    @Insert("INSERT INTO asset (computer_no, internal_code, mac_address, department, keeper, monitor_sn, host_sn, remark, status, " +
+            "asset_type, stock_status, purchase_time, purchase_batch, batch_id, deleted, created_at, updated_at) " +
+            "VALUES (#{computerNo}, #{internalCode}, #{macAddress}, #{department}, #{keeper}, #{monitorSn}, #{hostSn}, #{remark}, #{status}, " +
+            "#{assetType}, #{stockStatus}, #{purchaseTime}, #{purchaseBatch}, #{batchId}, 0, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Asset asset);
 
@@ -68,4 +68,37 @@ public interface AssetMapper {
 
     @Select("SELECT COUNT(*) FROM asset WHERE deleted = 0 AND monitor_sn = #{sn}")
     int countByMonitorSn(@Param("sn") String sn);
+
+    // 统一列表查询（支持多条件筛选）
+    @Select("<script>" +
+            "SELECT * FROM asset WHERE deleted = 0 " +
+            "<if test='assetType != null and assetType != \"\"'> AND asset_type = #{assetType} </if>" +
+            "<if test='stockStatus != null and stockStatus != \"\"'> AND stock_status = #{stockStatus} </if>" +
+            "<if test='batchId != null'> AND batch_id = #{batchId} </if>" +
+            "<if test='department != null and department != \"\"'> AND department = #{department} </if>" +
+            "<if test='keeper != null and keeper != \"\"'> AND keeper = #{keeper} </if>" +
+            "<if test='status != null'> AND status = #{status} </if>" +
+            " ORDER BY created_at DESC" +
+            "</script>")
+    List<Asset> findWithFilters(@Param("assetType") String assetType,
+                                @Param("stockStatus") String stockStatus,
+                                @Param("batchId") Long batchId,
+                                @Param("department") String department,
+                                @Param("keeper") String keeper,
+                                @Param("status") Integer status);
+
+    @Update("UPDATE asset SET status=#{status}, updated_at=NOW() WHERE id=#{id}")
+    int updateStatus(@Param("id") Long id, @Param("status") int status);
+
+    @Update("UPDATE asset SET department=#{department}, keeper=#{keeper}, updated_at=NOW() WHERE id=#{id}")
+    int updateKeeper(@Param("id") Long id, @Param("department") String department, @Param("keeper") String keeper);
+
+    @Select("SELECT * FROM asset WHERE deleted = 0 AND batch_id = #{batchId} ORDER BY created_at ASC")
+    List<Asset> findByBatchId(@Param("batchId") Long batchId);
+
+    @Select("SELECT asset_type, COUNT(*) as cnt FROM asset WHERE deleted = 0 GROUP BY asset_type")
+    List<java.util.Map<String, Object>> countByType();
+
+    @Select("SELECT MAX(CAST(SUBSTRING(internal_code, #{prefixLen}+1) AS UNSIGNED)) FROM asset WHERE internal_code LIKE CONCAT(#{prefix}, '-%')")
+    Long getMaxInternalCode(@Param("prefix") String prefix, @Param("prefixLen") int prefixLen);
 }

@@ -10,6 +10,8 @@ DROP TABLE IF EXISTS `asset_flow_log`;
 DROP TABLE IF EXISTS `lending_record`;
 DROP TABLE IF EXISTS `device_change_order`;
 DROP TABLE IF EXISTS `pc_asset`;
+DROP TABLE IF EXISTS `asset_relation`;
+DROP TABLE IF EXISTS `asset_batch`;
 DROP TABLE IF EXISTS `asset`;
 DROP TABLE IF EXISTS `asset_type`;
 DROP TABLE IF EXISTS `user`;
@@ -42,22 +44,54 @@ CREATE TABLE `asset_type` (
     `code` VARCHAR(20) NOT NULL UNIQUE COMMENT '类型编码',
     `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序',
     `status` INT NOT NULL DEFAULT 1 COMMENT '1=启用, 0=禁用',
+    `sn_required` TINYINT NOT NULL DEFAULT 1 COMMENT '是否需要SN码: 1=需要, 0=不需要',
+    `batch_enabled` TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用批次管理: 1=启用, 0=禁用',
+    `prefix` VARCHAR(10) DEFAULT NULL COMMENT '内部编码前缀(无SN设备用)',
+    `list_columns` TEXT DEFAULT NULL COMMENT '列表列定义(JSON数组)',
+    `fields_schema` TEXT DEFAULT NULL COMMENT '表单字段定义(JSON数组)',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备类型表';
 
 -- 默认设备类型
-INSERT INTO `asset_type` (`name`, `code`, `sort_order`) VALUES
-('台式主机', 'desktop', 1),
-('显示器', 'monitor', 2),
-('笔记本', 'laptop', 3),
-('智能门锁', 'lock', 4),
-('监控', 'camera', 5),
-('一卡通', 'card', 6),
-('翻页笔', 'pointer', 7),
-('网络设备', 'network', 8),
-('机械钥匙', 'key', 9),
-('未知', 'unknown', 99);
+INSERT INTO `asset_type` (`name`, `code`, `sort_order`, `sn_required`, `batch_enabled`, `prefix`, `list_columns`, `fields_schema`) VALUES
+('台式主机', 'desktop', 1, 1, 1, 'PC', '["hostSn","monitorSn","macAddress"]', '["hostSn","monitorSn","macAddress","remark"]'),
+('显示器', 'monitor', 2, 1, 1, 'MN', '["monitorSn"]', '["monitorSn","remark"]'),
+('笔记本', 'laptop', 3, 1, 1, 'NB', '["hostSn","macAddress"]', '["hostSn","macAddress","remark"]'),
+('智能门锁', 'lock', 4, 0, 0, 'LK', '["remark"]', '["remark"]'),
+('监控', 'camera', 5, 0, 0, 'CM', '["remark"]', '["remark"]'),
+('一卡通', 'card', 6, 1, 1, 'CD', '["hostSn"]', '["hostSn","remark"]'),
+('翻页笔', 'pointer', 7, 0, 1, 'PN', '["remark"]', '["remark"]'),
+('网络设备', 'network', 8, 0, 0, 'NW', '["remark"]', '["remark"]'),
+('机械钥匙', 'key', 9, 0, 0, 'KY', '["remark"]', '["remark"]'),
+('未知', 'unknown', 99, 0, 1, 'UN', '["remark"]', '["remark"]');
+
+-- =============================================
+-- 采购批次表
+-- =============================================
+CREATE TABLE `asset_batch` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `batch_no` VARCHAR(50) NOT NULL COMMENT '批次号',
+    `asset_type` VARCHAR(20) NOT NULL COMMENT '设备类型',
+    `purchase_date` DATE DEFAULT NULL COMMENT '购入日期',
+    `supplier` VARCHAR(100) DEFAULT NULL COMMENT '供应商',
+    `quantity` INT NOT NULL DEFAULT 0 COMMENT '设备数量',
+    `remark` TEXT DEFAULT NULL COMMENT '备注',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购批次表';
+
+-- =============================================
+-- 资产关联表（电脑套装绑定）
+-- =============================================
+CREATE TABLE `asset_relation` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `host_asset_id` BIGINT NOT NULL COMMENT '主机资产ID',
+    `related_asset_id` BIGINT NOT NULL COMMENT '关联资产ID(如显示器)',
+    `relation_type` VARCHAR(20) NOT NULL DEFAULT 'computer_set' COMMENT '关系类型',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_relation` (`host_asset_id`, `related_asset_id`, `relation_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资产关联表';
 
 -- =============================================
 -- 资产表
@@ -65,6 +99,7 @@ INSERT INTO `asset_type` (`name`, `code`, `sort_order`) VALUES
 CREATE TABLE `asset` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `computer_no` VARCHAR(50) DEFAULT NULL UNIQUE COMMENT '电脑编号',
+    `internal_code` VARCHAR(50) DEFAULT NULL COMMENT '内部编码(无SN设备自动生成)',
     `mac_address` VARCHAR(50) DEFAULT NULL COMMENT 'MAC地址',
     `department` VARCHAR(50) DEFAULT NULL COMMENT '保管部门',
     `keeper` VARCHAR(50) DEFAULT NULL COMMENT '保管人',
@@ -72,10 +107,11 @@ CREATE TABLE `asset` (
     `host_sn` VARCHAR(100) DEFAULT NULL COMMENT '主机序列号',
     `remark` TEXT DEFAULT NULL COMMENT '备注',
     `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常运行, 0=已停用',
-    `asset_type` VARCHAR(20) NOT NULL DEFAULT 'unknown' COMMENT '设备类型: desktop/monitor/lock/camera/card/laptop/pointer/network/key/unknown',
+    `asset_type` VARCHAR(20) NOT NULL DEFAULT 'unknown' COMMENT '设备类型',
     `stock_status` VARCHAR(20) NOT NULL DEFAULT 'in_stock' COMMENT '库存状态: in_stock/in_use/scrapped/returned',
     `purchase_time` DATETIME DEFAULT NULL COMMENT '采购入库时间',
     `purchase_batch` VARCHAR(50) DEFAULT NULL COMMENT '采购批次号',
+    `batch_id` BIGINT DEFAULT NULL COMMENT '所属批次ID',
     `last_inspection_time` DATETIME DEFAULT NULL COMMENT '最近巡检时间',
     `last_inspection_user` VARCHAR(50) DEFAULT NULL COMMENT '最近巡检人',
     `last_inspection_batch` VARCHAR(50) DEFAULT NULL COMMENT '最近巡检批次号',
@@ -211,20 +247,33 @@ INSERT INTO `user` (`username`, `password`, `role`, `name`, `email`, `status`) V
 ('assistant2', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'assistant', '王同学', NULL, 1);
 
 -- 库存资产测试数据
-INSERT INTO `asset` (`computer_no`, `mac_address`, `host_sn`, `monitor_sn`, `asset_type`, `stock_status`, `purchase_batch`, `remark`, `status`, `deleted`) VALUES
-('ASM-00001', NULL, 'HW-DESKTOP-001', NULL, 'desktop', 'in_stock', 'BATCH202601', '华为台式机', 1, 0),
-('ASM-00002', NULL, 'HW-DESKTOP-002', NULL, 'desktop', 'in_stock', 'BATCH202601', '华为台式机', 1, 0),
-('ASM-00003', NULL, 'HW-DESKTOP-003', NULL, 'desktop', 'in_stock', 'BATCH202601', '华为台式机', 1, 0),
-('ASM-00004', NULL, NULL, 'HW-MONITOR-001', 'monitor', 'in_stock', 'BATCH202601', '华为显示器', 1, 0),
-('ASM-00005', NULL, NULL, 'HW-MONITOR-002', 'monitor', 'in_stock', 'BATCH202601', '华为显示器', 1, 0),
-('ASM-00006', NULL, NULL, 'HW-MONITOR-003', 'monitor', 'in_stock', 'BATCH202601', '华为显示器', 1, 0),
-('ASM-00007', NULL, 'SN-LAPTOP-001', NULL, 'laptop', 'in_stock', 'BATCH202602', 'ThinkPad笔记本', 1, 0),
-('ASM-00008', NULL, 'SN-LAPTOP-002', NULL, 'laptop', 'in_stock', 'BATCH202602', 'ThinkPad笔记本', 1, 0),
-('ASM-00009', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', '翻页笔 无线', 1, 0),
-('ASM-00010', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', '翻页笔 无线', 1, 0),
-('ASM-00011', NULL, NULL, NULL, 'lock', 'in_use', NULL, '教学楼301门锁', 1, 0),
-('ASM-00012', NULL, NULL, NULL, 'camera', 'in_use', NULL, '走廊监控摄像头', 1, 0),
-('ASM-00013', NULL, NULL, NULL, 'network', 'in_use', NULL, '机房交换机', 1, 0);
+INSERT INTO `asset` (`computer_no`, `internal_code`, `mac_address`, `host_sn`, `monitor_sn`, `asset_type`, `stock_status`, `purchase_batch`, `batch_id`, `remark`, `status`, `deleted`) VALUES
+('ASM-00001', NULL, NULL, 'HW-DESKTOP-001', NULL, 'desktop', 'in_stock', 'BATCH202601', 1, '华为台式机', 1, 0),
+('ASM-00002', NULL, NULL, 'HW-DESKTOP-002', NULL, 'desktop', 'in_stock', 'BATCH202601', 1, '华为台式机', 1, 0),
+('ASM-00003', NULL, NULL, 'HW-DESKTOP-003', NULL, 'desktop', 'in_stock', 'BATCH202601', 1, '华为台式机', 1, 0),
+('ASM-00004', NULL, NULL, NULL, 'HW-MONITOR-001', 'monitor', 'in_stock', 'BATCH202601', 2, '华为显示器', 1, 0),
+('ASM-00005', NULL, NULL, NULL, 'HW-MONITOR-002', 'monitor', 'in_stock', 'BATCH202601', 2, '华为显示器', 1, 0),
+('ASM-00006', NULL, NULL, NULL, 'HW-MONITOR-003', 'monitor', 'in_stock', 'BATCH202601', 2, '华为显示器', 1, 0),
+('ASM-00007', NULL, NULL, 'SN-LAPTOP-001', NULL, 'laptop', 'in_stock', 'BATCH202602', 4, 'ThinkPad笔记本', 1, 0),
+('ASM-00008', NULL, NULL, 'SN-LAPTOP-002', NULL, 'laptop', 'in_stock', 'BATCH202602', 4, 'ThinkPad笔记本', 1, 0),
+('ASM-00009', 'PN-00001', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', 3, '翻页笔 无线', 1, 0),
+('ASM-00010', 'PN-00002', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', 3, '翻页笔 无线', 1, 0),
+('ASM-00011', 'LK-00001', NULL, NULL, NULL, 'lock', 'in_use', NULL, NULL, '教学楼301门锁', 1, 0),
+('ASM-00012', 'CM-00001', NULL, NULL, NULL, 'camera', 'in_use', NULL, NULL, '走廊监控摄像头', 1, 0),
+('ASM-00013', 'NW-00001', NULL, NULL, NULL, 'network', 'in_use', NULL, NULL, '机房交换机', 1, 0);
+
+-- 采购批次测试数据
+INSERT INTO `asset_batch` (`batch_no`, `asset_type`, `purchase_date`, `supplier`, `quantity`, `remark`) VALUES
+('BATCH202601', 'desktop', '2026-01-15', '华为经销商', 3, '华为台式机采购'),
+('BATCH202601', 'monitor', '2026-01-15', '华为经销商', 3, '华为显示器采购'),
+('BATCH202601', 'pointer', '2026-01-20', '京东', 2, '翻页笔采购'),
+('BATCH202602', 'laptop', '2026-02-10', '联想经销商', 2, 'ThinkPad笔记本采购');
+
+-- 资产关联测试数据（主机+显示器套装）
+INSERT INTO `asset_relation` (`host_asset_id`, `related_asset_id`, `relation_type`) VALUES
+(1, 4, 'computer_set'),
+(2, 5, 'computer_set'),
+(3, 6, 'computer_set');
 
 -- 华为电脑管理测试数据（已配出的成套设备）
 INSERT INTO `pc_asset` (`computer_no`, `mac_address`, `host_sn`, `monitor_sn`, `department`, `keeper`, `remark`, `status`, `deleted`) VALUES

@@ -93,4 +93,49 @@ public class AssetService {
     public List<Asset> findStockByBatch(String assetType, String batch) {
         return assetMapper.findStockByBatch(assetType, batch);
     }
+
+    public List<Asset> findWithFilters(String assetType, String stockStatus, Long batchId,
+                                       String department, String keeper, Integer status) {
+        return assetMapper.findWithFilters(assetType, stockStatus, batchId, department, keeper, status);
+    }
+
+    public void changeStatus(Long id, int status) {
+        assetMapper.updateStatus(id, status);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void batchChangeStatus(List<Long> ids, int status) {
+        for (Long id : ids) {
+            assetMapper.updateStatus(id, status);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void batchChangeKeeper(List<Long> ids, String department, String keeper) {
+        for (Long id : ids) {
+            assetMapper.updateKeeper(id, department, keeper);
+        }
+    }
+
+    public List<Asset> findByBatchId(Long batchId) {
+        return assetMapper.findByBatchId(batchId);
+    }
+
+    public List<java.util.Map<String, Object>> countByType() {
+        return assetMapper.countByType();
+    }
+
+    public Asset createSingle(Asset asset, String prefix) {
+        // 生成内部编码
+        if (prefix != null && !prefix.isEmpty()) {
+            Long maxNo = assetMapper.getMaxInternalCode(prefix, prefix.length());
+            long nextNo = (maxNo == null ? 1 : maxNo + 1);
+            asset.setInternalCode(String.format("%s-%05d", prefix, nextNo));
+        }
+        asset.setStockStatus("in_stock");
+        asset.setStatus(1);
+        asset.setDeleted(0);
+        assetMapper.insert(asset);
+        return asset;
+    }
 }
