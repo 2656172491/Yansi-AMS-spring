@@ -101,4 +101,21 @@ public interface AssetMapper {
 
     @Select("SELECT MAX(CAST(SUBSTRING(internal_code, #{prefixLen}+1) AS UNSIGNED)) FROM asset WHERE internal_code LIKE CONCAT(#{prefix}, '-%')")
     Long getMaxInternalCode(@Param("prefix") String prefix, @Param("prefixLen") int prefixLen);
+
+    @Select("SELECT a.* FROM asset a INNER JOIN asset_type t ON a.asset_type = t.code " +
+            "WHERE a.deleted = 0 AND t.category_code = #{categoryCode} ORDER BY a.created_at DESC")
+    List<Asset> findByCategory(@Param("categoryCode") String categoryCode);
+
+    @Select("<script>" +
+            "SELECT a.* FROM asset a INNER JOIN asset_type t ON a.asset_type = t.code " +
+            "WHERE a.deleted = 0 AND t.category_code = #{categoryCode} " +
+            "<if test='assetType != null and assetType != \"\"'> AND a.asset_type = #{assetType} </if>" +
+            "<if test='department != null and department != \"\"'> AND a.department = #{department} </if>" +
+            "<if test='keeper != null and keeper != \"\"'> AND a.keeper = #{keeper} </if>" +
+            " ORDER BY a.created_at DESC" +
+            "</script>")
+    List<Asset> findByCategoryWithFilters(@Param("categoryCode") String categoryCode,
+                                          @Param("assetType") String assetType,
+                                          @Param("department") String department,
+                                          @Param("keeper") String keeper);
 }

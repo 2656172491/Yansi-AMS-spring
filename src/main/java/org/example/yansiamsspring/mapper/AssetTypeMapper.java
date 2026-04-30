@@ -20,12 +20,12 @@ public interface AssetTypeMapper {
     @Select("SELECT * FROM asset_type WHERE code = #{code}")
     AssetType findByCode(@Param("code") String code);
 
-    @Insert("INSERT INTO asset_type (name, code, sort_order, status, sn_required, batch_enabled, prefix, list_columns, fields_schema) " +
-            "VALUES (#{name}, #{code}, #{sortOrder}, #{status}, #{snRequired}, #{batchEnabled}, #{prefix}, #{listColumns}, #{fieldsSchema})")
+    @Insert("INSERT INTO asset_type (name, code, category_code, sort_order, status, sn_required, batch_enabled, prefix, list_columns, fields_schema) " +
+            "VALUES (#{name}, #{code}, #{categoryCode}, #{sortOrder}, #{status}, #{snRequired}, #{batchEnabled}, #{prefix}, #{listColumns}, #{fieldsSchema})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(AssetType assetType);
 
-    @Update("UPDATE asset_type SET name=#{name}, code=#{code}, sort_order=#{sortOrder}, status=#{status}, " +
+    @Update("UPDATE asset_type SET name=#{name}, code=#{code}, category_code=#{categoryCode}, sort_order=#{sortOrder}, status=#{status}, " +
             "sn_required=#{snRequired}, batch_enabled=#{batchEnabled}, prefix=#{prefix}, " +
             "list_columns=#{listColumns}, fields_schema=#{fieldsSchema}, updated_at=NOW() WHERE id=#{id}")
     int update(AssetType assetType);

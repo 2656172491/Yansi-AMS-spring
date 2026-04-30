@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS `asset_relation`;
 DROP TABLE IF EXISTS `asset_batch`;
 DROP TABLE IF EXISTS `asset`;
 DROP TABLE IF EXISTS `asset_type`;
+DROP TABLE IF EXISTS `asset_category`;
 DROP TABLE IF EXISTS `user`;
 
 -- =============================================
@@ -36,12 +37,35 @@ INSERT INTO `user` (`username`, `password`, `role`, `name`, `email`, `status`)
 VALUES ('admin', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'admin', '系统管理员', NULL, 1);
 
 -- =============================================
+-- 设备大类表
+-- =============================================
+CREATE TABLE `asset_category` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(50) NOT NULL COMMENT '大类名称',
+    `code` VARCHAR(20) NOT NULL UNIQUE COMMENT '大类编码',
+    `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=启用, 0=禁用',
+    `data_source` VARCHAR(20) NOT NULL DEFAULT 'asset' COMMENT '数据源: asset 或 pc_asset',
+    `list_columns` TEXT DEFAULT NULL COMMENT '列表列定义(JSON数组)',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备大类表';
+
+INSERT INTO `asset_category` (`name`, `code`, `sort_order`, `data_source`, `list_columns`) VALUES
+('华为电脑', 'pc', 1, 'pc_asset', '["computerNo","hostSn","monitorSn","macAddress","department","keeper","status","lastInspectionTime","remark"]'),
+('网络设备', 'network', 2, 'asset', '["computerNo","internalCode","hostSn","remark","department","keeper","status"]'),
+('日常用品', 'daily', 3, 'asset', '["computerNo","internalCode","remark","department","keeper","status"]'),
+('监控设备', 'camera', 4, 'asset', '["computerNo","internalCode","remark","department","keeper","status"]'),
+('会议设备', 'meeting', 5, 'asset', '["computerNo","internalCode","remark","department","keeper","status"]');
+
+-- =============================================
 -- 设备类型表
 -- =============================================
 CREATE TABLE `asset_type` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(50) NOT NULL COMMENT '类型名称',
     `code` VARCHAR(20) NOT NULL UNIQUE COMMENT '类型编码',
+    `category_code` VARCHAR(20) DEFAULT NULL COMMENT '所属大类编码',
     `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序',
     `status` INT NOT NULL DEFAULT 1 COMMENT '1=启用, 0=禁用',
     `sn_required` TINYINT NOT NULL DEFAULT 1 COMMENT '是否需要SN码: 1=需要, 0=不需要',
@@ -54,17 +78,17 @@ CREATE TABLE `asset_type` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备类型表';
 
 -- 默认设备类型
-INSERT INTO `asset_type` (`name`, `code`, `sort_order`, `sn_required`, `batch_enabled`, `prefix`, `list_columns`, `fields_schema`) VALUES
-('台式主机', 'desktop', 1, 1, 1, 'PC', '["hostSn","monitorSn","macAddress"]', '["hostSn","monitorSn","macAddress","remark"]'),
-('显示器', 'monitor', 2, 1, 1, 'MN', '["monitorSn"]', '["monitorSn","remark"]'),
-('笔记本', 'laptop', 3, 1, 1, 'NB', '["hostSn","macAddress"]', '["hostSn","macAddress","remark"]'),
-('智能门锁', 'lock', 4, 0, 0, 'LK', '["remark"]', '["remark"]'),
-('监控', 'camera', 5, 0, 0, 'CM', '["remark"]', '["remark"]'),
-('一卡通', 'card', 6, 1, 1, 'CD', '["hostSn"]', '["hostSn","remark"]'),
-('翻页笔', 'pointer', 7, 0, 1, 'PN', '["remark"]', '["remark"]'),
-('网络设备', 'network', 8, 0, 0, 'NW', '["remark"]', '["remark"]'),
-('机械钥匙', 'key', 9, 0, 0, 'KY', '["remark"]', '["remark"]'),
-('未知', 'unknown', 99, 0, 1, 'UN', '["remark"]', '["remark"]');
+INSERT INTO `asset_type` (`name`, `code`, `category_code`, `sort_order`, `sn_required`, `batch_enabled`, `prefix`, `list_columns`, `fields_schema`) VALUES
+('台式主机', 'desktop', 'pc', 1, 1, 1, 'PC', '["hostSn","monitorSn","macAddress"]', '["hostSn","monitorSn","macAddress","remark"]'),
+('显示器', 'monitor', 'pc', 2, 1, 1, 'MN', '["monitorSn"]', '["monitorSn","remark"]'),
+('笔记本', 'laptop', 'pc', 3, 1, 1, 'NB', '["hostSn","macAddress"]', '["hostSn","macAddress","remark"]'),
+('智能门锁', 'lock', 'network', 4, 0, 0, 'LK', '["remark"]', '["remark"]'),
+('监控', 'camera', 'camera', 5, 0, 0, 'CM', '["remark"]', '["remark"]'),
+('一卡通', 'card', 'daily', 6, 1, 1, 'CD', '["hostSn"]', '["hostSn","remark"]'),
+('翻页笔', 'pointer', 'daily', 7, 0, 1, 'PN', '["remark"]', '["remark"]'),
+('网络设备', 'network', 'network', 8, 0, 0, 'NW', '["remark"]', '["remark"]'),
+('机械钥匙', 'key', 'network', 9, 0, 0, 'KY', '["remark"]', '["remark"]'),
+('未知', 'unknown', NULL, 99, 0, 1, 'UN', '["remark"]', '["remark"]');
 
 -- =============================================
 -- 采购批次表

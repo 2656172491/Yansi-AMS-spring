@@ -127,6 +127,15 @@ public class AssetController {
         return Result.success(assetService.findWithFilters(assetType, stockStatus, batchId, department, keeper, status));
     }
 
+    @GetMapping("/by-category")
+    public Result<List<Asset>> byCategory(
+            @RequestParam String categoryCode,
+            @RequestParam(required = false) String assetType,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) String keeper) {
+        return Result.success(assetService.findByCategoryWithFilters(categoryCode, assetType, department, keeper));
+    }
+
     // ========== 状态变更 ==========
 
     @PutMapping("/{id}/status")

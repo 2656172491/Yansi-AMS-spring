@@ -138,4 +138,12 @@ public class AssetService {
         assetMapper.insert(asset);
         return asset;
     }
+
+    public List<Asset> findByCategory(String categoryCode) {
+        return assetMapper.findByCategory(categoryCode);
+    }
+
+    public List<Asset> findByCategoryWithFilters(String categoryCode, String assetType, String department, String keeper) {
+        return assetMapper.findByCategoryWithFilters(categoryCode, assetType, department, keeper);
+    }
 }
