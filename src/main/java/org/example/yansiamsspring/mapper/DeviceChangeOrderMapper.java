@@ -40,4 +40,7 @@ public interface DeviceChangeOrderMapper {
     @Select("SELECT order_type as orderType, COUNT(*) as cnt FROM device_change_order " +
             "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY) GROUP BY order_type")
     List<java.util.Map<String, Object>> countByType(@Param("days") int days);
+
+    @Delete("DELETE FROM device_change_order WHERE asset_category = #{assetCategory}")
+    int deleteByAssetCategory(@Param("assetCategory") String assetCategory);
 }

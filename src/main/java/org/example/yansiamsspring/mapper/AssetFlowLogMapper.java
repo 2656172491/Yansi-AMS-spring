@@ -1,7 +1,9 @@
 package org.example.yansiamsspring.mapper;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.example.yansiamsspring.pojo.AssetFlowLog;
 
@@ -21,4 +23,7 @@ public interface AssetFlowLogMapper {
             "GROUP BY DATE(flow_time), flow_type " +
             "ORDER BY date")
     List<Map<String, Object>> countByDays(int days);
+
+    @Delete("DELETE FROM asset_flow_log WHERE asset_type = #{assetType}")
+    int deleteByAssetType(@Param("assetType") String assetType);
 }

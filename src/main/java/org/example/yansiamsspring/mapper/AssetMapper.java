@@ -37,4 +37,10 @@ public interface AssetMapper {
 
     @Update("UPDATE asset SET in_use_quantity=#{inUseQuantity}, updated_at=NOW() WHERE id=#{id}")
     int updateInUseQuantity(@Param("id") Long id, @Param("inUseQuantity") Integer inUseQuantity);
+
+    @Delete("DELETE FROM asset WHERE asset_type = #{assetType}")
+    int deleteByAssetType(@Param("assetType") String assetType);
+
+    @Select("SELECT id FROM asset WHERE asset_type = #{assetType}")
+    List<Long> findIdsByAssetType(@Param("assetType") String assetType);
 }

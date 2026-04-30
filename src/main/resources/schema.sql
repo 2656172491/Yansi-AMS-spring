@@ -10,6 +10,8 @@ DROP TABLE IF EXISTS `asset_flow_log`;
 DROP TABLE IF EXISTS `lending_record`;
 DROP TABLE IF EXISTS `device_change_order`;
 DROP TABLE IF EXISTS `pc_asset`;
+DROP TABLE IF EXISTS `host_stock`;
+DROP TABLE IF EXISTS `monitor_stock`;
 DROP TABLE IF EXISTS `network_device`;
 DROP TABLE IF EXISTS `daily_supply`;
 DROP TABLE IF EXISTS `camera_device`;
@@ -234,16 +236,42 @@ CREATE TABLE `operation_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志';
 
 -- =============================================
--- 华为电脑管理表（已配出的台式主机+显示器成套）
+-- 主机库存表
+-- =============================================
+CREATE TABLE `host_stock` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `sn` VARCHAR(100) NOT NULL COMMENT '主机SN',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'in_stock' COMMENT 'in_stock/assigned',
+    `remark` TEXT DEFAULT NULL COMMENT '备注',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_sn` (`sn`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='主机库存';
+
+-- =============================================
+-- 显示器库存表
+-- =============================================
+CREATE TABLE `monitor_stock` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `sn` VARCHAR(100) NOT NULL COMMENT '显示器SN',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'in_stock' COMMENT 'in_stock/assigned',
+    `remark` TEXT DEFAULT NULL COMMENT '备注',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_sn` (`sn`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='显示器库存';
+
+-- =============================================
+-- 华为电脑管理表（配对记录：主机+显示器+分配信息）
 -- =============================================
 CREATE TABLE `pc_asset` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `computer_no` VARCHAR(50) DEFAULT NULL COMMENT '电脑编号',
+    `host_id` BIGINT DEFAULT NULL COMMENT '主机库存ID',
+    `monitor_id` BIGINT DEFAULT NULL COMMENT '显示器库存ID',
     `mac_address` VARCHAR(50) DEFAULT NULL COMMENT 'MAC地址',
     `department` VARCHAR(50) DEFAULT NULL COMMENT '保管部门',
     `keeper` VARCHAR(50) DEFAULT NULL COMMENT '保管人',
-    `monitor_sn` VARCHAR(100) DEFAULT NULL COMMENT '显示器序列号',
-    `host_sn` VARCHAR(100) DEFAULT NULL COMMENT '主机序列号',
     `remark` TEXT DEFAULT NULL COMMENT '备注',
     `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常运行, 0=已停用',
     `last_inspection_time` DATETIME DEFAULT NULL COMMENT '最近巡检时间',
@@ -251,7 +279,7 @@ CREATE TABLE `pc_asset` (
     `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除: 0=正常, 1=已删除',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='华为电脑管理';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='华为电脑管理(配对记录)';
 
 -- =============================================
 -- 网络设备表
@@ -344,13 +372,34 @@ INSERT INTO `asset_relation` (`host_asset_id`, `related_asset_id`, `relation_typ
 (2, 5, 'computer_set'),
 (3, 6, 'computer_set');
 
+-- 主机库存测试数据
+INSERT INTO `host_stock` (`sn`, `status`, `remark`) VALUES
+('HW-DESKTOP-100', 'assigned', '已配出-教务处'),
+('HW-DESKTOP-101', 'assigned', '已配出-教务处'),
+('HW-DESKTOP-102', 'assigned', '已配出-学生处'),
+('HW-DESKTOP-103', 'assigned', '已配出-总务处'),
+('HW-DESKTOP-104', 'assigned', '已配出-信息中心'),
+('HW-DESKTOP-200', 'in_stock', '库存待分配'),
+('HW-DESKTOP-201', 'in_stock', '库存待分配'),
+('HW-DESKTOP-202', 'in_stock', '库存待分配');
+
+-- 显示器库存测试数据
+INSERT INTO `monitor_stock` (`sn`, `status`, `remark`) VALUES
+('HW-MONITOR-100', 'assigned', '已配出-教务处'),
+('HW-MONITOR-101', 'assigned', '已配出-教务处'),
+('HW-MONITOR-102', 'assigned', '已配出-学生处'),
+('HW-MONITOR-103', 'assigned', '已配出-总务处'),
+('HW-MONITOR-104', 'assigned', '已配出-信息中心'),
+('HW-MONITOR-200', 'in_stock', '库存待分配'),
+('HW-MONITOR-201', 'in_stock', '库存待分配');
+
 -- 华为电脑管理测试数据（已配出的成套设备）
-INSERT INTO `pc_asset` (`computer_no`, `mac_address`, `host_sn`, `monitor_sn`, `department`, `keeper`, `remark`, `status`, `deleted`) VALUES
-('PC-001', 'AA:BB:CC:DD:01:01', 'HW-DESKTOP-100', 'HW-MONITOR-100', '教务处', '赵主任', '教务处主任办公电脑', 1, 0),
-('PC-002', 'AA:BB:CC:DD:01:02', 'HW-DESKTOP-101', 'HW-MONITOR-101', '教务处', '刘老师', '教务处日常办公', 1, 0),
-('PC-003', 'AA:BB:CC:DD:01:03', 'HW-DESKTOP-102', 'HW-MONITOR-102', '学生处', '陈老师', '学生处办公电脑', 1, 0),
-('PC-004', 'AA:BB:CC:DD:01:04', 'HW-DESKTOP-103', 'HW-MONITOR-103', '总务处', '孙老师', '总务处财务专用', 1, 0),
-('PC-005', 'AA:BB:CC:DD:01:05', 'HW-DESKTOP-104', 'HW-MONITOR-104', '信息中心', '周老师', '机房管理用机', 1, 0);
+INSERT INTO `pc_asset` (`computer_no`, `mac_address`, `host_id`, `monitor_id`, `department`, `keeper`, `remark`, `status`, `deleted`) VALUES
+('PC-001', 'AA:BB:CC:DD:01:01', 1, 1, '教务处', '赵主任', '教务处主任办公电脑', 1, 0),
+('PC-002', 'AA:BB:CC:DD:01:02', 2, 2, '教务处', '刘老师', '教务处日常办公', 1, 0),
+('PC-003', 'AA:BB:CC:DD:01:03', 3, 3, '学生处', '陈老师', '学生处办公电脑', 1, 0),
+('PC-004', 'AA:BB:CC:DD:01:04', 4, 4, '总务处', '孙老师', '总务处财务专用', 1, 0),
+('PC-005', 'AA:BB:CC:DD:01:05', 5, 5, '信息中心', '周老师', '机房管理用机', 1, 0);
 
 -- 设备更换单测试数据
 INSERT INTO `device_change_order` (`order_no`, `order_type`, `asset_id`, `reporter`, `reporter_dept`, `fault_desc`, `handler`, `handler_id`, `status`, `result`) VALUES

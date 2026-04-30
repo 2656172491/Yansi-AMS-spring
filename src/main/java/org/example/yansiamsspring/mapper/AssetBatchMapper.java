@@ -24,4 +24,7 @@ public interface AssetBatchMapper {
 
     @Update("UPDATE asset_batch SET quantity=#{quantity}, remark=#{remark}, updated_at=NOW() WHERE id=#{id}")
     int update(AssetBatch batch);
+
+    @Delete("DELETE FROM asset_batch WHERE asset_type = #{assetType}")
+    int deleteByAssetType(@Param("assetType") String assetType);
 }

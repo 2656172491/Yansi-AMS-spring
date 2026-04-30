@@ -33,4 +33,7 @@ public interface LendingRecordMapper {
 
     @Select("SELECT DATE_FORMAT(lend_time, '%Y-%m') as month, COUNT(*) as cnt FROM lending_record GROUP BY month ORDER BY month DESC LIMIT 12")
     List<java.util.Map<String, Object>> countByMonth();
+
+    @Delete("<script>DELETE FROM lending_record WHERE asset_id IN <foreach collection='assetIds' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    int deleteByAssetIds(@Param("assetIds") List<Long> assetIds);
 }
