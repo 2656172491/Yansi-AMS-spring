@@ -10,6 +10,10 @@ DROP TABLE IF EXISTS `asset_flow_log`;
 DROP TABLE IF EXISTS `lending_record`;
 DROP TABLE IF EXISTS `device_change_order`;
 DROP TABLE IF EXISTS `pc_asset`;
+DROP TABLE IF EXISTS `network_device`;
+DROP TABLE IF EXISTS `daily_supply`;
+DROP TABLE IF EXISTS `camera_device`;
+DROP TABLE IF EXISTS `meeting_device`;
 DROP TABLE IF EXISTS `asset_relation`;
 DROP TABLE IF EXISTS `asset_batch`;
 DROP TABLE IF EXISTS `asset`;
@@ -53,10 +57,10 @@ CREATE TABLE `asset_category` (
 
 INSERT INTO `asset_category` (`name`, `code`, `sort_order`, `data_source`, `list_columns`) VALUES
 ('华为电脑', 'pc', 1, 'pc_asset', '["computerNo","hostSn","monitorSn","macAddress","department","keeper","status","lastInspectionTime","remark"]'),
-('网络设备', 'network', 2, 'asset', '["computerNo","internalCode","hostSn","remark","department","keeper","status"]'),
-('日常用品', 'daily', 3, 'asset', '["computerNo","internalCode","remark","department","keeper","status"]'),
-('监控设备', 'camera', 4, 'asset', '["computerNo","internalCode","remark","department","keeper","status"]'),
-('会议设备', 'meeting', 5, 'asset', '["computerNo","internalCode","remark","department","keeper","status"]');
+('网络设备', 'network', 2, 'network_device', '["deviceNo","sn","remark","status"]'),
+('日常用品', 'daily', 3, 'daily_supply', '["supplyType","quantity","warningQuantity","status"]'),
+('监控设备', 'camera', 4, 'camera_device', '["deviceNo","sn","remark","status"]'),
+('会议设备', 'meeting', 5, 'meeting_device', '["deviceNo","sn","remark","status"]');
 
 -- =============================================
 -- 设备类型表
@@ -122,27 +126,16 @@ CREATE TABLE `asset_relation` (
 -- =============================================
 CREATE TABLE `asset` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `computer_no` VARCHAR(50) DEFAULT NULL UNIQUE COMMENT '电脑编号',
-    `internal_code` VARCHAR(50) DEFAULT NULL COMMENT '内部编码(无SN设备自动生成)',
-    `mac_address` VARCHAR(50) DEFAULT NULL COMMENT 'MAC地址',
-    `department` VARCHAR(50) DEFAULT NULL COMMENT '保管部门',
-    `keeper` VARCHAR(50) DEFAULT NULL COMMENT '保管人',
-    `monitor_sn` VARCHAR(100) DEFAULT NULL COMMENT '显示器序列号',
-    `host_sn` VARCHAR(100) DEFAULT NULL COMMENT '主机序列号',
+    `asset_type` VARCHAR(20) NOT NULL COMMENT '设备类型编码',
+    `quantity` INT NOT NULL DEFAULT 0 COMMENT '库存数量',
+    `in_use_quantity` INT NOT NULL DEFAULT 0 COMMENT '在用数量',
+    `warning_quantity` INT NOT NULL DEFAULT -1 COMMENT '预警数量, -1=不预警',
     `remark` TEXT DEFAULT NULL COMMENT '备注',
-    `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常运行, 0=已停用',
-    `asset_type` VARCHAR(20) NOT NULL DEFAULT 'unknown' COMMENT '设备类型',
-    `stock_status` VARCHAR(20) NOT NULL DEFAULT 'in_stock' COMMENT '库存状态: in_stock/in_use/scrapped/returned',
-    `purchase_time` DATETIME DEFAULT NULL COMMENT '采购入库时间',
-    `purchase_batch` VARCHAR(50) DEFAULT NULL COMMENT '采购批次号',
-    `batch_id` BIGINT DEFAULT NULL COMMENT '所属批次ID',
-    `last_inspection_time` DATETIME DEFAULT NULL COMMENT '最近巡检时间',
-    `last_inspection_user` VARCHAR(50) DEFAULT NULL COMMENT '最近巡检人',
-    `last_inspection_batch` VARCHAR(50) DEFAULT NULL COMMENT '最近巡检批次号',
-    `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除: 0=正常, 1=已删除',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常, 0=停用',
+    `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资产表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资产汇总表(按设备类型)';
 
 -- =============================================
 -- 设备更换单
@@ -261,6 +254,62 @@ CREATE TABLE `pc_asset` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='华为电脑管理';
 
 -- =============================================
+-- 网络设备表
+-- =============================================
+CREATE TABLE `network_device` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `device_no` VARCHAR(50) DEFAULT NULL COMMENT '编号',
+    `sn` VARCHAR(100) DEFAULT NULL COMMENT 'SN码',
+    `remark` TEXT DEFAULT NULL COMMENT '备注',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常, 0=停用',
+    `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网络设备';
+
+-- =============================================
+-- 日常用品表
+-- =============================================
+CREATE TABLE `daily_supply` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `supply_type` VARCHAR(50) DEFAULT NULL COMMENT '设备类型',
+    `quantity` INT NOT NULL DEFAULT 0 COMMENT '设备数量',
+    `warning_quantity` INT NOT NULL DEFAULT 0 COMMENT '预警数量',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常, 0=停用',
+    `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='日常用品';
+
+-- =============================================
+-- 监控设备表
+-- =============================================
+CREATE TABLE `camera_device` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `device_no` VARCHAR(50) DEFAULT NULL COMMENT '编号',
+    `sn` VARCHAR(100) DEFAULT NULL COMMENT 'SN码',
+    `remark` TEXT DEFAULT NULL COMMENT '备注',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常, 0=停用',
+    `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='监控设备';
+
+-- =============================================
+-- 会议设备表
+-- =============================================
+CREATE TABLE `meeting_device` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `device_no` VARCHAR(50) DEFAULT NULL COMMENT '编号',
+    `sn` VARCHAR(100) DEFAULT NULL COMMENT 'SN码',
+    `remark` TEXT DEFAULT NULL COMMENT '备注',
+    `status` INT NOT NULL DEFAULT 1 COMMENT '1=正常, 0=停用',
+    `deleted` INT NOT NULL DEFAULT 0 COMMENT '软删除',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='会议设备';
+
+-- =============================================
 -- 测试数据
 -- =============================================
 
@@ -271,20 +320,16 @@ INSERT INTO `user` (`username`, `password`, `role`, `name`, `email`, `status`) V
 ('assistant2', '$2a$10$ef6coS3NtEghMeg06934COftXTpVy/YU2SN16aEyWBHxUH.3esWbG', 'assistant', '王同学', NULL, 1);
 
 -- 库存资产测试数据
-INSERT INTO `asset` (`computer_no`, `internal_code`, `mac_address`, `host_sn`, `monitor_sn`, `asset_type`, `stock_status`, `purchase_batch`, `batch_id`, `remark`, `status`, `deleted`) VALUES
-('ASM-00001', NULL, NULL, 'HW-DESKTOP-001', NULL, 'desktop', 'in_stock', 'BATCH202601', 1, '华为台式机', 1, 0),
-('ASM-00002', NULL, NULL, 'HW-DESKTOP-002', NULL, 'desktop', 'in_stock', 'BATCH202601', 1, '华为台式机', 1, 0),
-('ASM-00003', NULL, NULL, 'HW-DESKTOP-003', NULL, 'desktop', 'in_stock', 'BATCH202601', 1, '华为台式机', 1, 0),
-('ASM-00004', NULL, NULL, NULL, 'HW-MONITOR-001', 'monitor', 'in_stock', 'BATCH202601', 2, '华为显示器', 1, 0),
-('ASM-00005', NULL, NULL, NULL, 'HW-MONITOR-002', 'monitor', 'in_stock', 'BATCH202601', 2, '华为显示器', 1, 0),
-('ASM-00006', NULL, NULL, NULL, 'HW-MONITOR-003', 'monitor', 'in_stock', 'BATCH202601', 2, '华为显示器', 1, 0),
-('ASM-00007', NULL, NULL, 'SN-LAPTOP-001', NULL, 'laptop', 'in_stock', 'BATCH202602', 4, 'ThinkPad笔记本', 1, 0),
-('ASM-00008', NULL, NULL, 'SN-LAPTOP-002', NULL, 'laptop', 'in_stock', 'BATCH202602', 4, 'ThinkPad笔记本', 1, 0),
-('ASM-00009', 'PN-00001', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', 3, '翻页笔 无线', 1, 0),
-('ASM-00010', 'PN-00002', NULL, NULL, NULL, 'pointer', 'in_stock', 'BATCH202601', 3, '翻页笔 无线', 1, 0),
-('ASM-00011', 'LK-00001', NULL, NULL, NULL, 'lock', 'in_use', NULL, NULL, '教学楼301门锁', 1, 0),
-('ASM-00012', 'CM-00001', NULL, NULL, NULL, 'camera', 'in_use', NULL, NULL, '走廊监控摄像头', 1, 0),
-('ASM-00013', 'NW-00001', NULL, NULL, NULL, 'network', 'in_use', NULL, NULL, '机房交换机', 1, 0);
+INSERT INTO `asset` (`asset_type`, `quantity`, `in_use_quantity`, `warning_quantity`, `remark`, `status`, `deleted`) VALUES
+('desktop', 5, 3, 2, '华为台式主机', 1, 0),
+('monitor', 4, 3, 2, '华为显示器', 1, 0),
+('laptop', 3, 2, 1, 'ThinkPad笔记本', 1, 0),
+('pointer', 10, 2, 5, '无线翻页笔', 1, 0),
+('lock', 8, 6, -1, '智能门锁', 1, 0),
+('camera', 12, 10, -1, '监控摄像头', 1, 0),
+('network', 6, 4, 2, '交换机/AP', 1, 0),
+('key', 15, 10, -1, '机械钥匙', 1, 0),
+('card', 200, 150, 50, '学生一卡通', 1, 0);
 
 -- 采购批次测试数据
 INSERT INTO `asset_batch` (`batch_no`, `asset_type`, `purchase_date`, `supplier`, `quantity`, `remark`) VALUES
@@ -338,6 +383,36 @@ INSERT INTO `operation_log` (`user_id`, `username`, `name`, `operation_type`, `t
 (3, 'assistant1', '李同学', '配出', 'asset', 1, '将台式主机 ASM-00001 配出给信息中心周老师', 1, '192.168.1.101', '2026-04-28 14:00:00'),
 (2, 'teacher1', '张老师', '修改', 'pc_asset', 1, '修改了 PC-001 的保管人为赵主任', 1, '192.168.1.100', '2026-04-29 09:00:00'),
 (3, 'assistant1', '李同学', '归还', 'lending', 3, '归还了翻页笔 ASM-00009，借用人郑老师', 1, '192.168.1.101', '2026-04-29 10:00:00');
+
+-- 网络设备测试数据
+INSERT INTO `network_device` (`device_no`, `sn`, `remark`, `status`) VALUES
+('NET-001', 'SN-SW-24P-001', '24口交换机-机房A', 1),
+('NET-002', 'SN-SW-24P-002', '24口交换机-机房B', 1),
+('NET-003', 'SN-AP-001', '无线AP-教学楼1F', 1),
+('NET-004', 'SN-AP-002', '无线AP-教学楼2F', 1),
+('NET-005', 'SN-FW-001', '防火墙-主出口', 1);
+
+-- 日常用品测试数据
+INSERT INTO `daily_supply` (`supply_type`, `quantity`, `warning_quantity`, `status`) VALUES
+('翻页笔', 15, 5, 1),
+('鼠标', 30, 10, 1),
+('键盘', 20, 8, 1),
+('网线(根)', 50, 20, 1),
+('电源线', 25, 10, 1);
+
+-- 监控设备测试数据
+INSERT INTO `camera_device` (`device_no`, `sn`, `remark`, `status`) VALUES
+('CAM-001', 'SN-IPC-200W-001', '200W枪机-校门口', 1),
+('CAM-002', 'SN-IPC-200W-002', '200W枪机-操场', 1),
+('CAM-003', 'SN-IPC-400W-001', '400W球机-大厅', 1),
+('CAM-004', 'SN-NVR-16CH-001', '16路录像机-监控室', 1);
+
+-- 会议设备测试数据
+INSERT INTO `meeting_device` (`device_no`, `sn`, `remark`, `status`) VALUES
+('MTG-001', 'SN-MIC-001', '无线话筒-会议室A', 1),
+('MTG-002', 'SN-MIC-002', '无线话筒-会议室B', 1),
+('MTG-003', 'SN-PROJ-001', '投影仪-会议室A', 1),
+('MTG-004', 'SN-PROJ-002', '投影仪-阶梯教室', 1);
 
 -- 出入库流水测试数据
 INSERT INTO `asset_flow_log` (`asset_id`, `asset_type`, `flow_type`, `quantity`, `batch_no`, `operator`, `operator_id`, `flow_time`) VALUES

@@ -2,12 +2,10 @@ package org.example.yansiamsspring.pojo;
 
 import java.time.LocalDateTime;
 
-public class Asset {
+public class NetworkDevice {
     private Long id;
-    private String assetType;
-    private Integer quantity;
-    private Integer inUseQuantity;
-    private Integer warningQuantity;
+    private String deviceNo;
+    private String sn;
     private String remark;
     private Integer status;
     private Integer deleted;
@@ -16,14 +14,10 @@ public class Asset {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getAssetType() { return assetType; }
-    public void setAssetType(String assetType) { this.assetType = assetType; }
-    public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
-    public Integer getInUseQuantity() { return inUseQuantity; }
-    public void setInUseQuantity(Integer inUseQuantity) { this.inUseQuantity = inUseQuantity; }
-    public Integer getWarningQuantity() { return warningQuantity; }
-    public void setWarningQuantity(Integer warningQuantity) { this.warningQuantity = warningQuantity; }
+    public String getDeviceNo() { return deviceNo; }
+    public void setDeviceNo(String deviceNo) { this.deviceNo = deviceNo; }
+    public String getSn() { return sn; }
+    public void setSn(String sn) { this.sn = sn; }
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
     public Integer getStatus() { return status; }

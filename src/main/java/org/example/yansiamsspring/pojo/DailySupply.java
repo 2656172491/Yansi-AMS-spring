@@ -2,13 +2,11 @@ package org.example.yansiamsspring.pojo;
 
 import java.time.LocalDateTime;
 
-public class Asset {
+public class DailySupply {
     private Long id;
-    private String assetType;
+    private String supplyType;
     private Integer quantity;
-    private Integer inUseQuantity;
     private Integer warningQuantity;
-    private String remark;
     private Integer status;
     private Integer deleted;
     private LocalDateTime createdAt;
@@ -16,16 +14,12 @@ public class Asset {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getAssetType() { return assetType; }
-    public void setAssetType(String assetType) { this.assetType = assetType; }
+    public String getSupplyType() { return supplyType; }
+    public void setSupplyType(String supplyType) { this.supplyType = supplyType; }
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
-    public Integer getInUseQuantity() { return inUseQuantity; }
-    public void setInUseQuantity(Integer inUseQuantity) { this.inUseQuantity = inUseQuantity; }
     public Integer getWarningQuantity() { return warningQuantity; }
     public void setWarningQuantity(Integer warningQuantity) { this.warningQuantity = warningQuantity; }
-    public String getRemark() { return remark; }
-    public void setRemark(String remark) { this.remark = remark; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public Integer getDeleted() { return deleted; }
